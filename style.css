@@ -1,0 +1,274 @@
+:root {
+  --bg:      #0B0B10;
+  --surface: #13131C;
+  --text:    #E4E4EC;
+  --hint:    #54546A;
+
+  --heavy:   #C0391E;  /* iron-oxide red */
+  --medium:  #2870B8;  /* cold steel blue */
+  --brass:   #B8903A;  /* knurled brass — dots done, timer ring */
+  --green:   #39875A;  /* finish button */
+
+  --dot-empty: #1E1E2A;
+  --ring-c:    251.33;  /* 2π × 40 */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 200px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────── */
+.hdr {
+  padding: 14px 16px 12px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.week-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--hint);
+  margin-bottom: 3px;
+}
+
+.day-name {
+  font-family: 'Oswald', system-ui, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1.1;
+}
+
+.day-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.day-dot {
+  width: 20px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: var(--dot-empty);
+}
+.day-dot.done    { background: var(--brass); }
+.day-dot.current { background: var(--text); }
+
+/* ── Exercise list ───────────────────────── */
+.exlist {
+  padding: 12px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.excard {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 13px 14px;
+  border-left: 4px solid var(--heavy);
+  transition: opacity .25s, border-color .25s;
+}
+.excard.medium   { border-left-color: var(--medium); }
+.excard.all-done { border-left-color: var(--brass); opacity: .5; }
+
+.exname {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 5px;
+}
+
+.exmeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--hint);
+  margin-bottom: 4px;
+}
+
+.dropset-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--brass);
+  border: 1px solid rgba(184,144,58,.4);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.sets-row { margin-top: 10px; }
+
+/* ── Set dots ────────────────────────────── */
+.sets-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.sdot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--dot-empty);
+  border: 2px solid rgba(255,255,255,.06);
+  cursor: pointer;
+  transition: transform .12s, background .15s, border-color .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  color: #fff;
+}
+.sdot:active { transform: scale(.82); }
+
+.sdot.done {
+  background: var(--brass);
+  border-color: var(--brass);
+  font-size: 17px;
+  font-weight: 700;
+}
+.sdot.done::after { content: '✓'; }
+
+/* ── Bottom bar ──────────────────────────── */
+#bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(11,11,16,.97);
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* ── Buttons ─────────────────────────────── */
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 13px;
+  transition: transform .1s, opacity .1s;
+}
+.btn:active { transform: scale(.97); opacity: .8; }
+
+.btn-rest {
+  background: var(--surface);
+  color: var(--hint);
+  border: 1px solid rgba(255,255,255,.06);
+  letter-spacing: .02em;
+}
+.btn-finish {
+  background: var(--green);
+  color: #fff;
+}
+.btn-skip {
+  background: transparent;
+  color: var(--hint);
+  font-size: 13px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.btn-restart {
+  background: var(--brass);
+  color: #fff;
+  font-size: 16px;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+/* ── Timer ring ──────────────────────────── */
+.timer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.ring-outer {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+
+.ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255,255,255,.07);
+  stroke-width: 5;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--brass);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 251.33;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.ring-fill.urgent { stroke: var(--heavy); }
+
+#timer-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.03em;
+}
+
+/* ── Full-screen states ──────────────────── */
+.fullscreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 32px;
+}
+
+.big-icon { font-size: 72px; margin-bottom: 14px; }
+.fullscreen h1 { font-family: 'Oswald', system-ui, sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+.fullscreen p  { color: var(--hint); font-size: 15px; line-height: 1.6; }
