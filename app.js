@@ -121,11 +121,27 @@ function renderWorkout() {
 
   appEl.innerHTML = `
     <div class="hdr">
-      <div class="week-tag">Неделя ${w + 1} из 8</div>
+      <div class="week-tag" id="week-tag">Неделя ${w + 1} из 8</div>
       <div class="day-name">${DAY_NAMES[d]}</div>
       <div class="day-dots">${dayDots}</div>
     </div>
     <div class="exlist">${cards}</div>`;
+
+  // Long-press on week tag → reset progress
+  let pressTimer = null;
+  const weekTag = document.getElementById('week-tag');
+  weekTag.addEventListener('pointerdown', () => {
+    pressTimer = setTimeout(() => {
+      haptic('heavy');
+      if (confirm('Сбросить весь прогресс и начать с недели 1?')) {
+        state = freshState();
+        save();
+        render();
+      }
+    }, 1000);
+  });
+  weekTag.addEventListener('pointerup',    () => clearTimeout(pressTimer));
+  weekTag.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
   appEl.querySelectorAll('.sdot').forEach(btn => {
     btn.addEventListener('click', () => {
