@@ -133,10 +133,11 @@ function renderWorkout() {
   weekTag.addEventListener('pointerdown', () => {
     pressTimer = setTimeout(() => {
       haptic('heavy');
-      if (confirm('Сбросить весь прогресс и начать с недели 1?')) {
-        state = freshState();
-        save();
-        render();
+      const doReset = () => { state = freshState(); save(); render(); };
+      if (tg?.showConfirm) {
+        tg.showConfirm('Сбросить весь прогресс и начать с недели 1?', ok => { if (ok) doReset(); });
+      } else {
+        if (confirm('Сбросить весь прогресс и начать с недели 1?')) doReset();
       }
     }, 1000);
   });
