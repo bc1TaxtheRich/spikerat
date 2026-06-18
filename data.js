@@ -1,6 +1,29 @@
+const IMG = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+
+const EXERCISE_IMG = {
+  'Сгибания с гантелями на бицепс с супинацией':     IMG + 'Dumbbell_Bicep_Curl/0.jpg',
+  'Сгибания с гантелями на бицепс с пронацией':      IMG + 'Standing_Dumbbell_Reverse_Curl/0.jpg',
+  'Французский жим в блоке из-за головы':            IMG + 'Cable_Rope_Overhead_Triceps_Extension/0.jpg',
+  'Жим гантелей сидя':                               IMG + 'Dumbbell_Shoulder_Press/0.jpg',
+  'Отведения на дельты':                             IMG + 'Side_Lateral_Raise/0.jpg',
+  'Отведения пек-дек на заднюю дельту':              IMG + 'Cable_Rear_Delt_Fly/0.jpg',
+  'Жим лёжа':                                        IMG + 'Barbell_Bench_Press_-_Medium_Grip/0.jpg',
+  'Тяга вертикального блока':                        IMG + 'Wide-Grip_Lat_Pulldown/0.jpg',
+  'Присед со штангой':                               IMG + 'Barbell_Squat/0.jpg',
+  'Румынская тяга':                                  IMG + 'Romanian_Deadlift/0.jpg',
+  'Сгибания на бицепс с EZ-грифом хватом снизу':    IMG + 'EZ-Bar_Curl/0.jpg',
+  'Сгибания на бицепс с EZ-грифом хватом сверху':   IMG + 'Standing_Dumbbell_Reverse_Curl/0.jpg',
+  'Французский жим лёжа':                            IMG + 'EZ-Bar_Skullcrusher/0.jpg',
+  'Жим сидя в смите':                                IMG + 'Barbell_Shoulder_Press/0.jpg',
+  'Жим лёжа 30°':                                    IMG + 'Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg',
+  'Тяга горизонтального блока':                      IMG + 'Seated_Cable_Rows/0.jpg',
+  'Присед в гаке лицом к спинке':                   IMG + 'Hack_Squat/0.jpg',
+  'Отведения гантелей на переднюю дельту':           IMG + 'Side_Laterals_to_Front_Raise/0.jpg',
+};
+
 // e(name, intensity, sets, reps, isDropset)
 function e(n, i, s, r, d) {
-  return { name: n, intensity: i, sets: s, reps: r, isDropset: !!d };
+  return { name: n, intensity: i, sets: s, reps: r, isDropset: !!d, img: EXERCISE_IMG[n] || null };
 }
 
 const H = 'тяжёлая';

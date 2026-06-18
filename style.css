@@ -258,6 +258,114 @@ body {
   letter-spacing: -.03em;
 }
 
+/* ── Calendar ────────────────────────────── */
+.calendar {
+  padding: 10px 14px 4px;
+}
+
+.cal-legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--hint);
+  text-align: center;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.cal-cell {
+  height: 26px;
+  border-radius: 5px;
+  background: var(--dot-empty);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.cal-cell.cal-done    { background: var(--brass); }
+.cal-cell.cal-current { background: var(--accent, #2870B8); box-shadow: 0 0 0 1px var(--accent, #2870B8); }
+.cal-cell.cal-future  { background: transparent; border: 1px solid rgba(255,255,255,.04); }
+
+.cal-date {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0,0,0,.65);
+}
+
+/* ── Exercise image overlay ──────────────── */
+.exname.has-img { cursor: pointer; }
+
+.img-hint {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--hint);
+  opacity: .6;
+}
+
+.img-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.img-modal {
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 340px;
+  width: 100%;
+  position: relative;
+}
+
+.img-exname {
+  padding: 14px 44px 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.img-modal img {
+  width: 100%;
+  display: block;
+  max-height: 280px;
+  object-fit: cover;
+  background: var(--dot-empty);
+}
+
+.img-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Full-screen states ──────────────────── */
 .fullscreen {
   display: flex;

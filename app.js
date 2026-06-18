@@ -25,11 +25,18 @@ document.addEventListener('visibilitychange', () => {
 const KEY = 'wt_v1';
 
 function freshState() {
-  return { week: 0, day: 0, workout: null };
+  return { week: 0, day: 0, workout: null, history: [] };
 }
 
 function load() {
-  try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch {}
+  try {
+    const r = localStorage.getItem(KEY);
+    if (r) {
+      const s = JSON.parse(r);
+      if (!s.history) s.history = [];  // migrate old saves
+      return s;
+    }
+  } catch {}
   return freshState();
 }
 
@@ -45,7 +52,7 @@ let timerSec = 0;
 let timerTick = null;
 
 function startTimer(auto = false) {
-  if (timerTick && !auto) return;  // manual tap: don't interrupt running timer
+  if (timerTick && !auto) return;
   stopTimer();
   timerSec = TIMER_MAX;
   if (!auto) haptic('medium');
@@ -82,6 +89,24 @@ function fmt(s) {
 const appEl = document.getElementById('app');
 const barEl = document.getElementById('bar');
 
+// ── Exercise image overlay ─────────────────────────────
+function showExerciseImage(ex) {
+  if (!ex.img) return;
+  haptic('light');
+  const overlay = document.createElement('div');
+  overlay.className = 'img-overlay';
+  overlay.innerHTML = `
+    <div class="img-modal">
+      <div class="img-exname">${ex.name}</div>
+      <img src="${ex.img}" alt="${ex.name}" loading="lazy" onerror="this.parentElement.parentElement.remove()">
+      <button class="img-close">✕</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay || e.target.classList.contains('img-close')) overlay.remove();
+  });
+}
+
 // ── Main render ────────────────────────────────────────
 function render() {
   stopTimer();
@@ -108,6 +133,39 @@ function render() {
   renderBar();
 }
 
+function renderCalendar() {
+  const DAY_LABELS = ['Пн', 'Ср', 'Пт'];
+  const doneSet = new Set(state.history.map(h => `${h.week}-${h.day}`));
+
+  const cells = Array.from({length: 8}, (_, wi) =>
+    Array.from({length: 3}, (_, di) => {
+      const key = `${wi}-${di}`;
+      const h = state.history.find(x => x.week === wi && x.day === di);
+      const isCurrent = wi === state.week && di === state.day;
+      const isDone = doneSet.has(key);
+      const isFuture = wi > state.week || (wi === state.week && di > state.day);
+
+      let cls = 'cal-cell';
+      if (isDone) cls += ' cal-done';
+      else if (isCurrent) cls += ' cal-current';
+      else if (isFuture) cls += ' cal-future';
+
+      const dateStr = h ? h.date.slice(5).replace('-', '.') : '';
+      return `<div class="${cls}" title="${DAY_LABELS[di]} н.${wi+1}">
+        ${dateStr ? `<span class="cal-date">${dateStr}</span>` : ''}
+      </div>`;
+    }).join('')
+  ).join('');
+
+  return `
+    <div class="calendar">
+      <div class="cal-legend">
+        ${DAY_LABELS.map(l => `<span>${l}</span>`).join('')}
+      </div>
+      <div class="cal-grid">${cells}</div>
+    </div>`;
+}
+
 function renderWorkout() {
   const DAY_NAMES = ['Понедельник', 'Среда', 'Пятница'];
   const w = state.week;
@@ -128,13 +186,14 @@ function renderWorkout() {
 
     const heavy = ex.intensity === 'тяжёлая';
     const cardClass = `excard${heavy ? '' : ' medium'}${allDone ? ' all-done' : ''}`;
+    const hasImg = !!ex.img;
     return `
       <div class="${cardClass}">
         <div class="exmeta">
           ${ex.isDropset ? '<span class="dropset-tag">дропсет</span>' : ''}
           <span>${ex.sets}×${ex.reps}</span>
         </div>
-        <div class="exname">${ex.name}</div>
+        <div class="exname${hasImg ? ' has-img' : ''}" data-ei="${ei}">${ex.name}${hasImg ? '<span class="img-hint">▶</span>' : ''}</div>
         <div class="sets-row">${dots}</div>
       </div>`;
   }).join('');
@@ -145,9 +204,10 @@ function renderWorkout() {
       <div class="day-name">${DAY_NAMES[d]}</div>
       <div class="day-dots">${dayDots}</div>
     </div>
+    ${renderCalendar()}
     <div class="exlist">${cards}</div>`;
 
-  // Long-press on week tag → reset progress
+  // Long-press on week tag → reset
   let pressTimer = null;
   const weekTag = document.getElementById('week-tag');
   weekTag.addEventListener('pointerdown', () => {
@@ -164,6 +224,15 @@ function renderWorkout() {
   weekTag.addEventListener('pointerup',    () => clearTimeout(pressTimer));
   weekTag.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
+  // Exercise name tap → show image
+  appEl.querySelectorAll('.exname.has-img').forEach(el => {
+    el.addEventListener('click', () => {
+      const ei = +el.dataset.ei;
+      showExerciseImage(exs[ei]);
+    });
+  });
+
+  // Set dot taps
   appEl.querySelectorAll('.sdot').forEach(btn => {
     btn.addEventListener('click', () => {
       const ei = +btn.dataset.ei;
@@ -180,7 +249,6 @@ function renderWorkout() {
       renderBar();
       window.scrollTo({ top: scrollY, behavior: 'instant' });
 
-      // Auto-start timer after each set except the last one in an exercise
       if (nowDone && !isLastSetOfExercise) startTimer(true);
     });
   });
@@ -228,6 +296,11 @@ function renderBar() {
 function finishDay() {
   stopTimer();
   hapticOk();
+
+  // Record history
+  const today = new Date().toISOString().slice(0, 10);
+  const already = state.history.find(h => h.week === state.week && h.day === state.day);
+  if (!already) state.history.push({ week: state.week, day: state.day, date: today });
 
   state.day++;
   if (state.day >= 3) { state.day = 0; state.week++; }
