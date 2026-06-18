@@ -89,16 +89,81 @@ function fmt(s) {
 const appEl = document.getElementById('app');
 const barEl = document.getElementById('bar');
 
-// ── Exercise image overlay ─────────────────────────────
+// ── Exercise image overlay (2-frame animation) ─────────
 function showExerciseImage(ex) {
   if (!ex.img) return;
   haptic('light');
+
+  const frame1 = ex.img;
+  const frame2 = ex.img.replace('/0.jpg', '/1.jpg');
+
   const overlay = document.createElement('div');
   overlay.className = 'img-overlay';
   overlay.innerHTML = `
     <div class="img-modal">
       <div class="img-exname">${ex.name}</div>
-      <img src="${ex.img}" alt="${ex.name}" loading="lazy" onerror="this.parentElement.parentElement.remove()">
+      <img id="ex-gif" src="${frame1}" alt="${ex.name}" loading="lazy">
+      <button class="img-close">✕</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Alternate frames to simulate animation
+  let tick = 0;
+  const frames = [frame1, frame2];
+  const interval = setInterval(() => {
+    const img = document.getElementById('ex-gif');
+    if (!img) { clearInterval(interval); return; }
+    tick = 1 - tick;
+    img.src = frames[tick];
+  }, 700);
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay || e.target.classList.contains('img-close')) {
+      clearInterval(interval);
+      overlay.remove();
+    }
+  });
+}
+
+// ── Calendar overlay ───────────────────────────────────
+function showCalendar() {
+  haptic('light');
+  const DAY_LABELS = ['Пн', 'Ср', 'Пт'];
+  const MONTH_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+  const rows = Array.from({length: 8}, (_, wi) => {
+    const cells = Array.from({length: 3}, (_, di) => {
+      const h = state.history.find(x => x.week === wi && x.day === di);
+      const isCurrent = wi === state.week && di === state.day;
+      let cls = 'cal-cell';
+      if (h) cls += ' cal-done';
+      else if (isCurrent) cls += ' cal-current';
+      else if (wi > state.week || (wi === state.week && di > state.day)) cls += ' cal-future';
+
+      const dateStr = h ? (() => {
+        const d = new Date(h.date);
+        return `${d.getDate()} ${MONTH_RU[d.getMonth()]}`;
+      })() : '';
+      return `<div class="${cls}">${dateStr ? `<span class="cal-date">${dateStr}</span>` : ''}</div>`;
+    }).join('');
+    return `<div class="cal-row"><span class="cal-wk">Н${wi + 1}</span>${cells}</div>`;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'img-overlay';
+  overlay.innerHTML = `
+    <div class="img-modal cal-modal-inner">
+      <div class="img-exname">
+        История тренировок
+        <span style="color:var(--hint);font-weight:400;font-size:12px;margin-left:8px">${state.history.length} / 24</span>
+      </div>
+      <div class="cal-overlay-grid">
+        <div class="cal-overlay-head">
+          <span></span>
+          ${DAY_LABELS.map(l => `<span>${l}</span>`).join('')}
+        </div>
+        ${rows}
+      </div>
       <button class="img-close">✕</button>
     </div>`;
   document.body.appendChild(overlay);
@@ -133,38 +198,6 @@ function render() {
   renderBar();
 }
 
-function renderCalendar() {
-  const DAY_LABELS = ['Пн', 'Ср', 'Пт'];
-  const doneSet = new Set(state.history.map(h => `${h.week}-${h.day}`));
-
-  const cells = Array.from({length: 8}, (_, wi) =>
-    Array.from({length: 3}, (_, di) => {
-      const key = `${wi}-${di}`;
-      const h = state.history.find(x => x.week === wi && x.day === di);
-      const isCurrent = wi === state.week && di === state.day;
-      const isDone = doneSet.has(key);
-      const isFuture = wi > state.week || (wi === state.week && di > state.day);
-
-      let cls = 'cal-cell';
-      if (isDone) cls += ' cal-done';
-      else if (isCurrent) cls += ' cal-current';
-      else if (isFuture) cls += ' cal-future';
-
-      const dateStr = h ? h.date.slice(5).replace('-', '.') : '';
-      return `<div class="${cls}" title="${DAY_LABELS[di]} н.${wi+1}">
-        ${dateStr ? `<span class="cal-date">${dateStr}</span>` : ''}
-      </div>`;
-    }).join('')
-  ).join('');
-
-  return `
-    <div class="calendar">
-      <div class="cal-legend">
-        ${DAY_LABELS.map(l => `<span>${l}</span>`).join('')}
-      </div>
-      <div class="cal-grid">${cells}</div>
-    </div>`;
-}
 
 function renderWorkout() {
   const DAY_NAMES = ['Понедельник', 'Среда', 'Пятница'];
@@ -200,11 +233,18 @@ function renderWorkout() {
 
   appEl.innerHTML = `
     <div class="hdr">
-      <div class="week-tag" id="week-tag">Неделя ${w + 1} из 8</div>
+      <div class="hdr-top">
+        <div class="week-tag" id="week-tag">Неделя ${w + 1} из 8</div>
+        <button class="cal-btn" id="cal-btn" title="История">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M5 1v3M11 1v3M1 7h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
       <div class="day-name">${DAY_NAMES[d]}</div>
       <div class="day-dots">${dayDots}</div>
     </div>
-    ${renderCalendar()}
     <div class="exlist">${cards}</div>`;
 
   // Long-press on week tag → reset
@@ -223,6 +263,8 @@ function renderWorkout() {
   });
   weekTag.addEventListener('pointerup',    () => clearTimeout(pressTimer));
   weekTag.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+
+  document.getElementById('cal-btn')?.addEventListener('click', showCalendar);
 
   // Exercise name tap → show image
   appEl.querySelectorAll('.exname.has-img').forEach(el => {

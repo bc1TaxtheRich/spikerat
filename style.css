@@ -258,17 +258,37 @@ body {
   letter-spacing: -.03em;
 }
 
-/* ── Calendar ────────────────────────────── */
-.calendar {
-  padding: 10px 14px 4px;
+/* ── Header top row ──────────────────────── */
+.hdr-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
 }
 
-.cal-legend {
+.cal-btn {
+  background: none;
+  border: none;
+  color: var(--hint);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color .15s;
+}
+.cal-btn:active { color: var(--text); }
+
+/* ── Calendar overlay ────────────────────── */
+.cal-modal-inner { max-width: 320px; }
+
+.cal-overlay-head {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 28px repeat(3, 1fr);
   gap: 4px;
-  margin-bottom: 4px;
-  font-size: 10px;
+  padding: 10px 14px 6px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -276,31 +296,43 @@ body {
   text-align: center;
 }
 
-.cal-grid {
+.cal-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+  grid-template-columns: 28px repeat(3, 1fr);
   gap: 4px;
+  padding: 0 14px;
+  margin-bottom: 4px;
+}
+
+.cal-wk {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--hint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: .04em;
 }
 
 .cal-cell {
-  height: 26px;
-  border-radius: 5px;
+  height: 32px;
+  border-radius: 6px;
   background: var(--dot-empty);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .cal-cell.cal-done    { background: var(--brass); }
-.cal-cell.cal-current { background: var(--accent, #2870B8); box-shadow: 0 0 0 1px var(--accent, #2870B8); }
+.cal-cell.cal-current { background: var(--medium); }
 .cal-cell.cal-future  { background: transparent; border: 1px solid rgba(255,255,255,.04); }
 
 .cal-date {
   font-size: 9px;
   font-weight: 700;
-  color: rgba(0,0,0,.65);
+  color: rgba(0,0,0,.7);
+  line-height: 1;
+  text-align: center;
 }
 
 /* ── Exercise image overlay ──────────────── */
