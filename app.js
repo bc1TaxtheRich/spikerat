@@ -4,6 +4,23 @@ if (tg) { tg.ready(); tg.expand(); }
 function haptic(t) { tg?.HapticFeedback?.impactOccurred(t || 'light'); }
 function hapticOk() { tg?.HapticFeedback?.notificationOccurred('success'); }
 
+// ── Wake Lock ──────────────────────────────────────────
+let wakeLock = null;
+
+async function keepAwake() {
+  if (!navigator.wakeLock || wakeLock) return;
+  try { wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+}
+
+function releaseWake() {
+  wakeLock?.release().catch(() => {});
+  wakeLock = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') keepAwake();
+});
+
 // ── State ──────────────────────────────────────────────
 const KEY = 'wt_v1';
 
@@ -27,10 +44,11 @@ const TIMER_MAX = 120;
 let timerSec = 0;
 let timerTick = null;
 
-function startTimer() {
-  if (timerTick) return;
+function startTimer(auto = false) {
+  if (timerTick && !auto) return;  // manual tap: don't interrupt running timer
+  stopTimer();
   timerSec = TIMER_MAX;
-  haptic('medium');
+  if (!auto) haptic('medium');
   timerTick = setInterval(() => {
     timerSec--;
     if (timerSec <= 0) {
@@ -69,11 +87,13 @@ function render() {
   stopTimer();
 
   if (state.week >= 8) {
+    releaseWake();
     renderComplete();
     return;
   }
 
-  // Init workout state if needed
+  keepAwake();
+
   if (!state.workout || state.workout.week !== state.week || state.workout.day !== state.day) {
     const exs = WORKOUTS[state.week][state.day];
     state.workout = {
@@ -149,14 +169,19 @@ function renderWorkout() {
       const ei = +btn.dataset.ei;
       const si = +btn.dataset.si;
       const scrollY = window.scrollY;
+      const isLastSetOfExercise = si === state.workout.sets[ei].length - 1;
 
       state.workout.sets[ei][si] = !state.workout.sets[ei][si];
+      const nowDone = state.workout.sets[ei][si];
       save();
       haptic('light');
 
       renderWorkout();
       renderBar();
       window.scrollTo({ top: scrollY, behavior: 'instant' });
+
+      // Auto-start timer after each set except the last one in an exercise
+      if (nowDone && !isLastSetOfExercise) startTimer(true);
     });
   });
 }
@@ -192,7 +217,7 @@ function renderBar() {
   barEl.innerHTML = html;
 
   document.getElementById('btn-finish')?.addEventListener('click', finishDay);
-  document.getElementById('btn-rest')?.addEventListener('click', startTimer);
+  document.getElementById('btn-rest')?.addEventListener('click', () => startTimer());
   document.getElementById('btn-skip')?.addEventListener('click', () => {
     stopTimer();
     haptic('medium');
